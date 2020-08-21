@@ -19,7 +19,28 @@
             android:id="@+id/text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hello_world" />
+            android:layout_gravity="center|top"
+            android:text="@string/hello_world"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btnStartReader"
+            style="@android:style/Widget.DeviceDefault.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center"
+            android:editable="false"
+            android:text="Start"
+            android:textAlignment="center" />
+
+        <TextView
+            android:id="@+id/heartRateView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="sans-serif-medium"
+            android:text="TextView"
+            android:textSize="36sp" />
 
     </FrameLayout>
 </androidx.wear.widget.BoxInsetLayout>
