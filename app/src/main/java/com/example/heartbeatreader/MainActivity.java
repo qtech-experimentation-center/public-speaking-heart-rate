@@ -41,7 +41,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
             @Override
             public void onClick(View v) {
 
-                if(readerActivated == false) {
+                if(!readerActivated) {
                     btnStartReader.setBackgroundColor(Color.GREEN);
                     btnStartReader.setText("STOP");
                     readerActivated = true;
@@ -79,7 +79,6 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         Log.d(TAG, "onAccuracyChanged - accuracy: " + accuracy);
     }
 
-    @SuppressLint("SetTextI18n")
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
             String msg = "" + (int) event.values[0];
