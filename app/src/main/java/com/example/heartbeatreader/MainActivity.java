@@ -16,6 +16,8 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import androidx.room.Room;
+
 public class MainActivity extends WearableActivity implements SensorEventListener{
 
     private static final String TAG = "MainActivity";
@@ -61,6 +63,18 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         setAmbientEnabled();
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mHeartRateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
+
+        //DB
+        AppDatabase db = Room.databaseBuilder(getApplicationContext(),
+                AppDatabase.class, "database-name").build();
+        User user = new User();
+        user.firstName = "Alejo";
+        user.lastName = "Almeida";
+        user.uid = 1;
+        db.userDao().insertAll(user);
+
+        User newUser = db.userDao().findByName("Alejo", "Almeida");
+
     }
 
     private void startMeasure() {
