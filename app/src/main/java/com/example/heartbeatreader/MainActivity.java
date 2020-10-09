@@ -11,6 +11,7 @@ import android.hardware.SensorManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.wearable.activity.WearableActivity;
@@ -40,8 +41,6 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private Sensor mHeartRateSensor;
     private boolean readerActivated = false;
     private TextView mHeartRateView;
-    private int minBufferSize;
-    private DataOutput dataOutputStream;
 
     public void onResume() {
         super.onResume();
@@ -56,23 +55,15 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         btnStartReader = findViewById(R.id.btnStartReader);
         mHeartRateView = findViewById(R.id.heartRateView);
 
-        minBufferSize = 2;
-        dataOutputStream = null;
-
         btnStartReader.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 if (!readerActivated) {
-                    try {
-                        recordAudio();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
                     btnStartReader.setBackgroundColor(Color.GREEN);
                     btnStartReader.setText("STOP");
                     readerActivated = true;
+                    new AudioRecorder().execute();
                     startMeasure();
 
                 } else {
@@ -114,49 +105,6 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         }
     }
 
-    public void recordAudio() throws IOException {
-        String fileName = (LocalDateTime.now().toString()).concat("-test.pcm");
-        File file = new File(Environment.getExternalStorageDirectory(), fileName);
-
-        int sampleFreq = 8000;//(Integer)spFrequency.getSelectedItem();
-
-        try {
-            file.createNewFile();
-
-            OutputStream outputStream = new FileOutputStream(file);
-            BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
-            DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
-
-            int minBufferSize = AudioRecord.getMinBufferSize(sampleFreq,
-                    AudioFormat.CHANNEL_CONFIGURATION_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT);
-
-            short[] audioData = new short[minBufferSize];
-
-            AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.MIC,
-                    sampleFreq,
-                    AudioFormat.CHANNEL_CONFIGURATION_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    minBufferSize);
-
-            if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
-                audioRecord.startRecording();
-                //while (recording) {
-                for (int i = 0; i < 100; i++) {
-                    int numberOfShort = audioRecord.read(audioData, 0, minBufferSize);
-                    for (int j = 0; j < numberOfShort; j++) {
-                        dataOutputStream.writeShort(audioData[j]);
-                    }
-                }
-            }
-            audioRecord.stop();
-            dataOutputStream.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void requestRecordAudioPermission() {
         //check API version, do nothing if API version < 23!
         int currentapiVersion = android.os.Build.VERSION.SDK_INT;
@@ -173,5 +121,54 @@ public class MainActivity extends WearableActivity implements SensorEventListene
             }
         }
     }
+
+
+
+    class AudioRecorder extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... strings){
+            String fileName = (LocalDateTime.now().toString()).concat("-test.pcm");
+            File file = new File(Environment.getExternalStorageDirectory(), fileName);
+
+            int sampleFreq = 8000;//(Integer)spFrequency.getSelectedItem();
+
+            try {
+                file.createNewFile();
+
+                OutputStream outputStream = new FileOutputStream(file);
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+                DataOutputStream dataOutputStream = new DataOutputStream(bufferedOutputStream);
+
+                int minBufferSize = AudioRecord.getMinBufferSize(sampleFreq,
+                        AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT);
+
+                short[] audioData = new short[minBufferSize];
+
+                AudioRecord audioRecord = new AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION,
+                        sampleFreq,
+                        AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT,
+                        minBufferSize);
+
+                if (audioRecord.getState() == AudioRecord.STATE_INITIALIZED) {
+                    audioRecord.startRecording();
+                    while (readerActivated) {
+                        int numberOfShort = audioRecord.read(audioData, 0, minBufferSize);
+                        for (int j = 0; j < numberOfShort; j++) {
+                            dataOutputStream.writeShort(audioData[j]);
+                        }
+                    }
+                }
+                audioRecord.stop();
+                dataOutputStream.close();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
 
 }
