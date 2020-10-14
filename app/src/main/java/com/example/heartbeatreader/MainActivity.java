@@ -8,6 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorListener;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
@@ -65,16 +66,26 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         mHeartRateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
 
         //DB
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(),
+        final AppDatabase db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database-name").build();
-        User user = new User();
-        user.firstName = "Alejo";
-        user.lastName = "Almeida";
-        user.uid = 1;
-        db.userDao().insertAll(user);
 
-        User newUser = db.userDao().findByName("Alejo", "Almeida");
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                User user = new User();
+                user.firstName = "Alejos";
+                user.lastName = "Almeidas";
+                user.uid = 1;
+                db.userDao().insertAll(user);
+            }
+        });
 
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                User newUser = db.userDao().findByName("Alejos");
+            }
+        });
     }
 
     private void startMeasure() {
