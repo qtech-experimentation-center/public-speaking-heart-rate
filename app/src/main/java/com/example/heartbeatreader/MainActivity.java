@@ -17,7 +17,13 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
 public class MainActivity extends WearableActivity implements SensorEventListener{
 
@@ -67,23 +73,32 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
         //DB
         final AppDatabase db = Room.databaseBuilder(getApplicationContext(),
-                AppDatabase.class, "database-name").build();
+                AppDatabase.class, "database-name").fallbackToDestructiveMigration().build();
 
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                User user = new User();
-                user.firstName = "Alejos";
-                user.lastName = "Almeidas";
-                user.uid = 1;
-                db.userDao().insertAll(user);
+                Sample sample = new Sample();
+                sample.heartRate = "222";
+                sample.timeStamp = LocalDateTime.now().toString();
+                db.sampleDao().insertAll(sample);
             }
         });
 
+
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                User newUser = db.userDao().findByName("Alejos");
+                List<Sample> samples = db.sampleDao().getAll();
+                final Sample sample = samples.get(0);
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mHeartRateView.setText(sample.heartRate);
+                    }
+                });
+
             }
         });
     }
@@ -108,6 +123,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
             String msg = "" + (int) event.values[0];
             mHeartRateView.setText(msg);
+
         }
     }
 
