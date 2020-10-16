@@ -34,6 +34,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private Sensor mHeartRateSensor;
     private boolean readerActivated = false;
     private TextView mHeartRateView;
+    private AppDatabase db;
 
     public void onResume(){
         super.onResume();
@@ -72,35 +73,10 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         mHeartRateSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
 
         //DB
-        final AppDatabase db = Room.databaseBuilder(getApplicationContext(),
+        db = Room.databaseBuilder(getApplicationContext(),
                 AppDatabase.class, "database-name").fallbackToDestructiveMigration().build();
 
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                Sample sample = new Sample();
-                sample.heartRate = "222";
-                sample.timeStamp = LocalDateTime.now().toString();
-                db.sampleDao().insertAll(sample);
-            }
-        });
 
-
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                List<Sample> samples = db.sampleDao().getAll();
-                final Sample sample = samples.get(0);
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mHeartRateView.setText(sample.heartRate);
-                    }
-                });
-
-            }
-        });
     }
 
     private void startMeasure() {
@@ -121,8 +97,35 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
-            String msg = "" + (int) event.values[0];
-            mHeartRateView.setText(msg);
+            final String msg = "" + (int) event.values[0];
+
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Sample sample = new Sample();
+                    sample.heartRate = msg;
+                    sample.timeStamp = LocalDateTime.now().toString();
+                    db.sampleDao().insertAll(sample);
+                }
+            });
+
+            AsyncTask.execute(new Runnable() {
+                @Override
+                public void run() {
+                    List<Sample> samples = db.sampleDao().getAll();
+                    final Sample sample = samples.get(samples.size() - 1);
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mHeartRateView.setText(sample.heartRate);
+                        }
+                    });
+
+                }
+            });
+
+            //mHeartRateView.setText(msg);
 
         }
     }
