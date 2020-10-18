@@ -1,12 +1,10 @@
 package com.example.heartbeatreader;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
-import android.hardware.SensorListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,16 +12,10 @@ import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.TextView;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 import androidx.room.Room;
-import androidx.room.RoomDatabase;
 
 public class MainActivity extends WearableActivity implements SensorEventListener{
 
@@ -82,7 +74,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private void startMeasure() {
         boolean sensorRegistered = mSensorManager.registerListener(this,
                 mHeartRateSensor,
-                SensorManager.SENSOR_DELAY_FASTEST);
+                SensorManager.SENSOR_DELAY_NORMAL);
         Log.d(TAG, " Sensor registered: " + (sensorRegistered ? "yes" : "no"));
     }
 
@@ -99,6 +91,8 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
             final String msg = "" + (int) event.values[0];
 
+            mHeartRateView.setText("> " + msg);
+
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -108,24 +102,6 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                     db.sampleDao().insertAll(sample);
                 }
             });
-
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
-                    List<Sample> samples = db.sampleDao().getAll();
-                    final Sample sample = samples.get(samples.size() - 1);
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mHeartRateView.setText(sample.heartRate);
-                        }
-                    });
-
-                }
-            });
-
-            //mHeartRateView.setText(msg);
 
         }
     }
