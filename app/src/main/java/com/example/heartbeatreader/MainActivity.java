@@ -109,15 +109,16 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     public void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_HEART_RATE) {
             final String msg = "" + (int) event.values[0];
+            final String timeMark = LocalDateTime.now().toString();
 
-            mHeartRateView.setText("> " + msg);
+            mHeartRateView.setText(": " + msg);
 
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
                     Sample sample = new Sample();
                     sample.heartRate = msg;
-                    sample.timeStamp = LocalDateTime.now().toString();
+                    sample.timeStamp = timeMark;
                     db.sampleDao().insertAll(sample);
                 }
             });
@@ -149,7 +150,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
             String fileName = (LocalDateTime.now().toString()).concat("-test.pcm");
             File file = new File(Environment.getExternalStorageDirectory(), fileName);
 
-            int sampleFreq = 8000;//(Integer)spFrequency.getSelectedItem();
+            int sampleFreq = 4400;//(Integer)spFrequency.getSelectedItem();
 
             try {
                 file.createNewFile();
